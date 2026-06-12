@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Leaderboard — Line Follower Robot Competition{% endblock %}
+{% block nav_leaderboard %}active{% endblock %}
+
+{% block content %}
+<div class="main-content">
+
+    <!-- Page Title -->
+    <div class="page-title">
+        <h1>Competition Leaderboard</h1>
+        <p>Live rankings &bull; Updated after every run</p>
+    </div>
+
+    <!-- Mini Stopwatches -->
+    <div class="mini-stopwatches">
+        <div class="mini-sw" id="mini-sw-a">
+            <div>
+                <div class="sw-label">Track A</div>
+                <div class="sw-team-info text-muted" id="mini-sw-a-team" style="font-size:0.75rem; margin-top:4px;">—</div>
+            </div>
+            <div class="sw-time" id="mini-sw-a-time">00:00.00</div>
+        </div>
+        <div class="mini-sw" id="mini-sw-b">
+            <div>
+                <div class="sw-label">Track B</div>
+                <div class="sw-team-info text-muted" id="mini-sw-b-team" style="font-size:0.75rem; margin-top:4px;">—</div>
+            </div>
+            <div class="sw-time" id="mini-sw-b-time">00:00.00</div>
+        </div>
+    </div>
+
+    <div class="leaderboards-container">
+
+        <!-- ROUND 1 — ALL TEAMS -->
+        <div class="card" id="round1-card">
+            <div class="card-header">
+                <h2>Round 1 — All Teams</h2>
+                <span class="badge badge-live" id="round1-live-badge">● LIVE</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="leaderboard-table" id="round1-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Team</th>
+                            <th>Try 1</th>
+                            <th>Try 2</th>
+                            <th>Best Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="round1-body">
+                        <tr><td colspan="5" class="text-center text-muted" style="padding:24px;">Loading teams...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ROUND 2 — TOP 6 QUALIFIED -->
+        <div class="card" id="round2-card">
+            <div class="card-header">
+                <h2>Round 2 — Qualified Finals</h2>
+                <span class="badge badge-round">TOP 6</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="leaderboard-table" id="round2-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Team</th>
+                            <th>R1 Best</th>
+                            <th>Try 1</th>
+                            <th>Try 2</th>
+                            <th>Best Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="round2-body">
+                        <tr><td colspan="6" class="text-center text-muted" style="padding:24px;">Awaiting qualified teams...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/leaderboard.js' %}"></script>
+{% endblock %}

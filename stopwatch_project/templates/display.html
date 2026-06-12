@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Live Display — Line Follower Robot Competition{% endblock %}
+{% block nav_display %}active{% endblock %}
+{% block body_class %}display-mode{% endblock %}
+
+{% block content %}
+<div class="display-layout">
+
+    <!-- Track A Panel -->
+    <div class="display-panel track-a" id="panel-a">
+        <div class="display-track-label">Track A</div>
+
+        <div id="display-a-content">
+            <div class="display-team-info">
+                <div class="display-team-number" id="display-a-team-num">—</div>
+                <div class="display-team-name" id="display-a-team-name">Waiting for team...</div>
+                <div class="display-rank" id="display-a-rank"></div>
+            </div>
+            <div class="display-round-info" id="display-a-round">—</div>
+            <div class="display-stopwatch" id="display-a-time">00:00.00</div>
+            <div class="display-status waiting" id="display-a-status">READY</div>
+        </div>
+    </div>
+
+    <!-- Track B Panel -->
+    <div class="display-panel track-b" id="panel-b">
+        <div class="display-track-label">Track B</div>
+
+        <div id="display-b-content">
+            <div class="display-team-info">
+                <div class="display-team-number" id="display-b-team-num">—</div>
+                <div class="display-team-name" id="display-b-team-name">Waiting for team...</div>
+                <div class="display-rank" id="display-b-rank"></div>
+            </div>
+            <div class="display-round-info" id="display-b-round">—</div>
+            <div class="display-stopwatch" id="display-b-time">00:00.00</div>
+            <div class="display-status waiting" id="display-b-status">READY</div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/display.js' %}"></script>
+{% endblock %}

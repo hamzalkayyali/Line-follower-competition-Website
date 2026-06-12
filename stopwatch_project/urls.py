@@ -1,0 +1,26 @@
+# pyrefly: ignore [missing-import]
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # Page routes
+    path('', views.leaderboard_page, name='leaderboard'),
+    path('display/', views.display_page, name='display'),
+    path('judge/', views.judge_page, name='judge'),
+
+    # API — Stopwatch state (ESP32 integration)
+    path('api/state/', views.get_state, name='get_state'),
+    path('api/<str:track>/<str:action>/', views.trigger_event, name='trigger_event'),
+
+    # API — Data endpoints
+    path('api/teams/', views.api_teams, name='api_teams'),
+    path('api/leaderboard/', views.api_leaderboard, name='api_leaderboard'),
+    path('api/submit-run/', views.api_submit_run, name='api_submit_run'),
+    path('api/delete-run/', views.api_delete_run, name='api_delete_run'),
+    path('api/active-run/', views.api_active_run, name='api_active_run'),
+    path('api/set-active-run/', views.api_set_active_run, name='api_set_active_run'),
+    path('api/clear-active-run/', views.api_clear_active_run, name='api_clear_active_run'),
+    path('api/add-team/', views.api_add_team, name='api_add_team'),
+    path('api/edit-team/', views.api_edit_team, name='api_edit_team'),
+    path('api/delete-team/', views.api_delete_team, name='api_delete_team'),
+]
