@@ -1,11 +1,14 @@
+import os
 import json
 # pyrefly: ignore [missing-import]
 from django.http import HttpResponse, JsonResponse # pyright: ignore[reportMissingModuleSource]
 # pyrefly: ignore [missing-import]
-from django.shortcuts import render # pyright: ignore[reportMissingModuleSource]
+from django.shortcuts import render, redirect # pyright: ignore[reportMissingModuleSource]
 # pyrefly: ignore [missing-import]
 from django.views.decorators.csrf import csrf_exempt # pyright: ignore[reportMissingModuleSource]
 from .models import Team, MatchRun, ActiveRun
+
+JUDGE_PIN = os.environ.get('JUDGE_PIN', '1234')
 
 # ============================================================
 # IN-MEMORY STOPWATCH STATE (driven by ESP32 triggers)
@@ -29,8 +32,29 @@ def display_page(request):
     return render(request, 'display.html')
 
 
+def judge_login(request):
+    """PIN login page for the judge portal."""
+    if request.session.get('is_judge'):
+        return redirect('judge')
+    error = None
+    if request.method == 'POST':
+        if request.POST.get('pin') == JUDGE_PIN:
+            request.session['is_judge'] = True
+            return redirect('judge')
+        error = 'Wrong PIN. Try again.'
+    return render(request, 'judge_login.html', {'error': error})
+
+
+def judge_logout(request):
+    """Clears the judge session."""
+    request.session.pop('is_judge', None)
+    return redirect('leaderboard')
+
+
 def judge_page(request):
     """Renders the judge portal form page."""
+    if not request.session.get('is_judge'):
+        return redirect('judge_login')
     return render(request, 'judge.html')
 
 

@@ -7,6 +7,8 @@ urlpatterns = [
     path('', views.leaderboard_page, name='leaderboard'),
     path('display/', views.display_page, name='display'),
     path('judge/', views.judge_page, name='judge'),
+    path('judge/login/', views.judge_login, name='judge_login'),
+    path('judge/logout/', views.judge_logout, name='judge_logout'),
 
     # API — Stopwatch state (ESP32 integration)
     path('api/state/', views.get_state, name='get_state'),
