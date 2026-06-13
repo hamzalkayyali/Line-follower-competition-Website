@@ -1,0 +1,1 @@
+web: gunicorn stopwatch_project.wsgi --chdir .
