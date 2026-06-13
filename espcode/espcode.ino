@@ -1,12 +1,15 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 
 // --- 1. Network Configuration ---
 const char* ssid = "Alkayyali-2.4G";          // Change to your Wi-Fi name
 const char* password = "2001011521";  // Change to your Wi-Fi password
 
-// Replace 192.168.1.X with your computer's local IPv4 address
-const char* serverUrl = "http://192.168.1.21:8000/api/track1/"; //track2
+// *** CHANGE THIS before flashing: "track1" or "track2" ***
+const char* TRACK = "track1";
+
+const char* serverBase = "https://web-production-eadde.up.railway.app/api/";
 
 // --- 2. Pin Definitions ---
 const int START_BUTTON = 4;
@@ -14,8 +17,8 @@ const int STOP_BUTTON = 5;
 
 void setup() {
   Serial.begin(115200);
-  
-  // Configure pins with internal pull-up resistors. 
+
+  // Configure pins with internal pull-up resistors.
   // The pins will read HIGH normally, and LOW when the button connects them to GND.
   pinMode(START_BUTTON, INPUT_PULLUP);
   pinMode(STOP_BUTTON, INPUT_PULLUP);
@@ -34,21 +37,22 @@ void setup() {
 
 void sendTrigger(String action) {
   if (WiFi.status() == WL_CONNECTED) {
+    WiFiClientSecure client;
+    client.setInsecure(); // Skip SSL certificate verification
     HTTPClient http;
-    
-    // Constructing the full URL string, e.g., "http://192.168.1.50:8000/api/start/"
-    String fullUrl = serverUrl + action + "/";
-    http.begin(fullUrl);
-    
+
+    String fullUrl = String(serverBase) + TRACK + "/" + action + "/";
+    http.begin(client, fullUrl);
+
     // Send an empty HTTP POST request to Django
     int httpResponseCode = http.POST("");
-    
+
     if (httpResponseCode > 0) {
       Serial.printf("Trigger '%s' sent! Django Response: %d\n", action.c_str(), httpResponseCode);
     } else {
       Serial.printf("Failed to send '%s'. Error: %s\n", action.c_str(), http.errorToString(httpResponseCode).c_str());
     }
-    http.end(); // Always close the connection
+    http.end();
   } else {
     Serial.println("Error: Lost Wi-Fi connection!");
   }
