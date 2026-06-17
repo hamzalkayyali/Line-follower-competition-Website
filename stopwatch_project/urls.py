@@ -10,6 +10,13 @@ urlpatterns = [
     path('judge/login/', views.judge_login, name='judge_login'),
     path('judge/logout/', views.judge_logout, name='judge_logout'),
 
+    # Calibration API (must be before the generic trigger route)
+    path('api/calibration/state/', views.api_calibration_state, name='api_calibration_state'),
+    path('api/calibration/start/', views.api_calibration_start, name='api_calibration_start'),
+    path('api/calibration/pause/', views.api_calibration_pause, name='api_calibration_pause'),
+    path('api/calibration/reset/', views.api_calibration_reset, name='api_calibration_reset'),
+    path('api/calibration/set-teams/', views.api_calibration_set_teams, name='api_calibration_set_teams'),
+
     # API — Stopwatch state (ESP32 integration)
     path('api/state/', views.get_state, name='get_state'),
     path('api/<str:track>/<str:action>/', views.trigger_event, name='trigger_event'),
@@ -32,10 +39,4 @@ urlpatterns = [
     path('calibration/login/', views.calibration_login, name='calibration_login'),
     path('calibration/logout/', views.calibration_logout, name='calibration_logout'),
 
-    # Calibration API
-    path('api/calibration/state/', views.api_calibration_state, name='api_calibration_state'),
-    path('api/calibration/start/', views.api_calibration_start, name='api_calibration_start'),
-    path('api/calibration/pause/', views.api_calibration_pause, name='api_calibration_pause'),
-    path('api/calibration/reset/', views.api_calibration_reset, name='api_calibration_reset'),
-    path('api/calibration/set-teams/', views.api_calibration_set_teams, name='api_calibration_set_teams'),
 ]
