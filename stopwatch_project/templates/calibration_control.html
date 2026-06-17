@@ -76,7 +76,17 @@ function fmtTime(sec) {
 }
 
 async function timerAction(action) {
-    await fetch(`/api/calibration/${action}/`, { method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')} });
+    try {
+        const r = await fetch(`/api/calibration/${action}/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
+        const d = await r.json();
+        if (d.success) showToast(action.charAt(0).toUpperCase() + action.slice(1) + '!');
+        else showToast('Error: ' + (d.error || 'unknown'), 'error');
+    } catch(e) {
+        showToast('Request failed: ' + e.message, 'error');
+    }
 }
 
 async function setTeams() {
