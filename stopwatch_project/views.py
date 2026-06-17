@@ -124,6 +124,10 @@ def api_leaderboard(request):
         r1_try1 = r1_try1_run.total_time if r1_try1_run else None
         r1_try2 = r1_try2_run.total_time if r1_try2_run else None
         r1_best = team.round1_best
+        r1_best_checkpoints = max(
+            (r.checkpoints_reached for r in [r1_try1_run, r1_try2_run] if r and not r.finished),
+            default=0
+        )
 
         round1_data.append({
             'team_id': team.id,
@@ -132,6 +136,7 @@ def api_leaderboard(request):
             'round1_try1': r1_try1,
             'round1_try2': r1_try2,
             'round1_best': r1_best,
+            'best_checkpoints': r1_best_checkpoints,
         })
 
         # Round 2 data (only teams that have round 2 runs)
@@ -142,6 +147,10 @@ def api_leaderboard(request):
             r2_try1 = r2_try1_run.total_time if r2_try1_run else None
             r2_try2 = r2_try2_run.total_time if r2_try2_run else None
             r2_best = team.round2_best
+            r2_best_checkpoints = max(
+                (r.checkpoints_reached for r in [r2_try1_run, r2_try2_run] if r and not r.finished),
+                default=0
+            )
 
             round2_data.append({
                 'team_id': team.id,
@@ -151,11 +160,12 @@ def api_leaderboard(request):
                 'round2_try1': r2_try1,
                 'round2_try2': r2_try2,
                 'round2_best': r2_best,
+                'best_checkpoints': r2_best_checkpoints,
             })
 
-    # Sort by best time (ascending)
-    round1_data.sort(key=lambda x: x['round1_best'])
-    round2_data.sort(key=lambda x: x['round2_best'])
+    # Sort: best time ASC, then most checkpoints DESC as tiebreaker
+    round1_data.sort(key=lambda x: (x['round1_best'], -x['best_checkpoints']))
+    round2_data.sort(key=lambda x: (x['round2_best'], -x['best_checkpoints']))
 
     return JsonResponse({
         'round1': round1_data,

@@ -123,19 +123,19 @@ function renderRound1(teams) {
         return;
     }
 
-    // Sort by best time ascending
-    teams.sort((a, b) => a.round1_best - b.round1_best);
+    // Sort: best time ASC, then most checkpoints DESC as tiebreaker
+    teams.sort((a, b) => a.round1_best - b.round1_best || (b.best_checkpoints || 0) - (a.best_checkpoints || 0));
 
     tbody.innerHTML = teams.map((team, i) => {
         const rank = i + 1;
         const try1 = team.round1_try1;
         const try2 = team.round1_try2;
         const best = team.round1_best;
-        // Top 6 get "qualified" highlight, rest get default
-        const badgeClass = rank <= 6 ? 'rank-qualified' : 'rank-default';
+        const finished = best && best < 9999;
+        const badgeClass = rank <= 8 ? 'rank-qualified' : 'rank-default';
 
         return `
-            <tr style="animation-delay: ${(i * 0.05).toFixed(2)}s" class="${rank <= 6 ? 'row-qualified' : ''}">
+            <tr style="animation-delay: ${(i * 0.05).toFixed(2)}s" class="${rank <= 8 ? 'row-qualified' : ''}">
                 <td><span class="rank-badge ${badgeClass}">${rank}</span></td>
                 <td>
                     <div class="team-info">
@@ -143,9 +143,9 @@ function renderRound1(teams) {
                         <span class="team-name">${team.team_name}</span>
                     </div>
                 </td>
-                <td class="time-cell ${try1 ? '' : 'empty'}">${try1 ? formatTime(try1) : '—'}</td>
-                <td class="time-cell ${try2 ? '' : 'empty'}">${try2 ? formatTime(try2) : '—'}</td>
-                <td class="time-cell ${best && best < 9999 ? 'best' : 'empty'}">${best && best < 9999 ? formatTime(best) : '—'}</td>
+                <td class="time-cell ${try1 && try1 < 9999 ? '' : 'empty'}">${try1 && try1 < 9999 ? formatTime(try1) : (try1 ? `DNF (${team.best_checkpoints}pts)` : '—')}</td>
+                <td class="time-cell ${try2 && try2 < 9999 ? '' : 'empty'}">${try2 && try2 < 9999 ? formatTime(try2) : (try2 ? `DNF (${team.best_checkpoints}pts)` : '—')}</td>
+                <td class="time-cell ${finished ? 'best' : 'empty'}">${finished ? formatTime(best) : (best ? `DNF (${team.best_checkpoints} checkpoints)` : '—')}</td>
             </tr>
         `;
     }).join('');
@@ -158,8 +158,8 @@ function renderRound2(teams) {
         return;
     }
 
-    // Sort by round2 best time ascending
-    teams.sort((a, b) => a.round2_best - b.round2_best);
+    // Sort: best time ASC, then most checkpoints DESC as tiebreaker
+    teams.sort((a, b) => a.round2_best - b.round2_best || (b.best_checkpoints || 0) - (a.best_checkpoints || 0));
 
     tbody.innerHTML = teams.map((team, i) => {
         const rank = i + 1;
