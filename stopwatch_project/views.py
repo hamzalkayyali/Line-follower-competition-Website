@@ -6,9 +6,11 @@ from django.http import HttpResponse, JsonResponse # pyright: ignore[reportMissi
 from django.shortcuts import render, redirect # pyright: ignore[reportMissingModuleSource]
 # pyrefly: ignore [missing-import]
 from django.views.decorators.csrf import csrf_exempt # pyright: ignore[reportMissingModuleSource]
-from .models import Team, MatchRun, ActiveRun
+from django.utils import timezone # pyright: ignore[reportMissingModuleSource]
+from .models import Team, MatchRun, ActiveRun, CalibrationSession
 
 JUDGE_PIN = os.environ.get('JUDGE_PIN', '1234')
+ORGANIZER_PIN = os.environ.get('ORGANIZER_PIN', '0000')
 
 # ============================================================
 # IN-MEMORY STOPWATCH STATE (driven by ESP32 triggers)
@@ -454,3 +456,112 @@ def api_delete_team(request):
         return JsonResponse({'success': True, 'deleted': team_name})
     except Team.DoesNotExist:
         return JsonResponse({'error': 'Team not found'}, status=404)
+
+
+# ============================================================
+# CALIBRATION — Organizer Login / Logout
+# ============================================================
+def calibration_login(request):
+    if request.session.get('is_organizer'):
+        return redirect('calibration_control')
+    error = None
+    if request.method == 'POST':
+        if request.POST.get('pin') == ORGANIZER_PIN:
+            request.session['is_organizer'] = True
+            return redirect('calibration_control')
+        error = 'Wrong PIN. Try again.'
+    return render(request, 'calibration_login.html', {'error': error})
+
+
+def calibration_logout(request):
+    request.session.pop('is_organizer', None)
+    return redirect('leaderboard')
+
+
+# ============================================================
+# CALIBRATION — Pages
+# ============================================================
+def calibration_display(request):
+    return render(request, 'calibration_display.html')
+
+
+def calibration_control(request):
+    if not request.session.get('is_organizer'):
+        return redirect('calibration_login')
+    teams = Team.objects.all().order_by('team_number')
+    return render(request, 'calibration_control.html', {'teams': teams})
+
+
+# ============================================================
+# CALIBRATION — API
+# ============================================================
+def _get_session():
+    session, _ = CalibrationSession.objects.get_or_create(id=1)
+    return session
+
+
+def api_calibration_state(request):
+    s = _get_session()
+    team_a = s.team_a
+    team_b = s.team_b
+    return JsonResponse({
+        'is_running': s.is_running,
+        'is_finished': s.is_finished,
+        'remaining': s.remaining_seconds,
+        'team_a': {'id': team_a.id, 'number': team_a.team_number, 'name': team_a.team_name} if team_a else None,
+        'team_b': {'id': team_b.id, 'number': team_b.team_number, 'name': team_b.team_name} if team_b else None,
+    })
+
+
+@csrf_exempt
+def api_calibration_start(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    s = _get_session()
+    if not s.is_running and not s.is_finished:
+        s.started_at = timezone.now()
+        s.is_running = True
+        s.save()
+    return JsonResponse({'success': True})
+
+
+@csrf_exempt
+def api_calibration_pause(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    s = _get_session()
+    if s.is_running and s.started_at:
+        s.elapsed_before_pause += (timezone.now() - s.started_at).total_seconds()
+        s.is_running = False
+        s.started_at = None
+        s.save()
+    return JsonResponse({'success': True})
+
+
+@csrf_exempt
+def api_calibration_reset(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    s = _get_session()
+    s.is_running = False
+    s.started_at = None
+    s.elapsed_before_pause = 0.0
+    s.save()
+    return JsonResponse({'success': True})
+
+
+@csrf_exempt
+def api_calibration_set_teams(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    s = _get_session()
+    team_a_id = data.get('team_a_id')
+    team_b_id = data.get('team_b_id')
+    s.team_a = Team.objects.get(id=team_a_id) if team_a_id else None
+    s.team_b = Team.objects.get(id=team_b_id) if team_b_id else None
+    s.save()
+    return JsonResponse({'success': True})

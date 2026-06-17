@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}Calibration Control{% endblock %}
+
+{% block content %}
+<div style="max-width:600px; margin:3rem auto; padding:0 1rem;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+        <h2 style="margin:0;">Calibration Control</h2>
+        <a href="{% url 'calibration_logout' %}" style="opacity:0.5; font-size:0.85rem;">Log out</a>
+    </div>
+
+    <!-- Timer display -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:2rem; text-align:center; margin-bottom:1.5rem;">
+        <div id="ctrl-timer" style="font-size:5rem; font-weight:900; font-variant-numeric:tabular-nums; line-height:1;">10:00</div>
+        <div id="ctrl-status" style="opacity:0.5; margin-top:0.5rem; font-size:0.9rem;">WAITING TO START</div>
+    </div>
+
+    <!-- Timer controls -->
+    <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
+        <button id="btn-start" onclick="timerAction('start')"
+            style="flex:1; padding:1rem; border-radius:8px; border:none; background:#22c55e; color:#fff; font-size:1rem; font-weight:700; cursor:pointer;">
+            ▶ Start
+        </button>
+        <button id="btn-pause" onclick="timerAction('pause')"
+            style="flex:1; padding:1rem; border-radius:8px; border:none; background:#f59e0b; color:#000; font-size:1rem; font-weight:700; cursor:pointer;">
+            ⏸ Pause
+        </button>
+        <button id="btn-reset" onclick="timerAction('reset')"
+            style="flex:1; padding:1rem; border-radius:8px; border:none; background:#ef4444; color:#fff; font-size:1rem; font-weight:700; cursor:pointer;">
+            ↺ Reset
+        </button>
+    </div>
+
+    <!-- Team assignment -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <h3 style="margin:0 0 1.2rem;">Assign Teams</h3>
+
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <label style="width:80px; opacity:0.7;">Track A</label>
+                <select id="sel-team-a" style="flex:1; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
+                    <option value="">— No team —</option>
+                    {% for t in teams %}
+                    <option value="{{ t.id }}">#{{ t.team_number }} {{ t.team_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <label style="width:80px; opacity:0.7;">Track B</label>
+                <select id="sel-team-b" style="flex:1; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
+                    <option value="">— No team —</option>
+                    {% for t in teams %}
+                    <option value="{{ t.id }}">#{{ t.team_number }} {{ t.team_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button onclick="setTeams()"
+                style="padding:0.75rem; border-radius:8px; border:none; background:#6366f1; color:#fff; font-size:1rem; font-weight:600; cursor:pointer;">
+                Save Teams
+            </button>
+        </div>
+    </div>
+
+    <div style="text-align:center;">
+        <a href="{% url 'calibration_display' %}" target="_blank"
+            style="opacity:0.6; font-size:0.9rem;">Open display page ↗</a>
+    </div>
+</div>
+
+<script>
+function fmtTime(sec) {
+    sec = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+async function timerAction(action) {
+    await fetch(`/api/calibration/${action}/`, { method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')} });
+}
+
+async function setTeams() {
+    const teamAId = document.getElementById('sel-team-a').value;
+    const teamBId = document.getElementById('sel-team-b').value;
+    await fetch('/api/calibration/set-teams/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+        body: JSON.stringify({ team_a_id: teamAId || null, team_b_id: teamBId || null })
+    });
+    showToast('Teams saved!');
+}
+
+async function poll() {
+    try {
+        const r = await fetch('/api/calibration/state/');
+        const d = await r.json();
+        document.getElementById('ctrl-timer').textContent = fmtTime(d.remaining);
+
+        const statusEl = document.getElementById('ctrl-status');
+        if (d.is_finished) statusEl.textContent = 'TIME UP';
+        else if (d.is_running) statusEl.textContent = 'RUNNING';
+        else if (d.remaining >= 600) statusEl.textContent = 'WAITING TO START';
+        else statusEl.textContent = 'PAUSED';
+
+        if (d.team_a) document.getElementById('sel-team-a').value = d.team_a.id;
+        if (d.team_b) document.getElementById('sel-team-b').value = d.team_b.id;
+    } catch(e) {}
+    setTimeout(poll, 500);
+}
+
+function getCookie(name) {
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+}
+
+poll();
+</script>
+{% endblock %}

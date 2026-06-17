@@ -25,4 +25,17 @@ urlpatterns = [
     path('api/add-team/', views.api_add_team, name='api_add_team'),
     path('api/edit-team/', views.api_edit_team, name='api_edit_team'),
     path('api/delete-team/', views.api_delete_team, name='api_delete_team'),
+
+    # Calibration pages
+    path('calibration/', views.calibration_display, name='calibration_display'),
+    path('calibration/control/', views.calibration_control, name='calibration_control'),
+    path('calibration/login/', views.calibration_login, name='calibration_login'),
+    path('calibration/logout/', views.calibration_logout, name='calibration_logout'),
+
+    # Calibration API
+    path('api/calibration/state/', views.api_calibration_state, name='api_calibration_state'),
+    path('api/calibration/start/', views.api_calibration_start, name='api_calibration_start'),
+    path('api/calibration/pause/', views.api_calibration_pause, name='api_calibration_pause'),
+    path('api/calibration/reset/', views.api_calibration_reset, name='api_calibration_reset'),
+    path('api/calibration/set-teams/', views.api_calibration_set_teams, name='api_calibration_set_teams'),
 ]

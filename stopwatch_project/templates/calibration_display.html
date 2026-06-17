@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Calibration — Line Follower Competition{% endblock %}
+{% block body_class %}display-mode{% endblock %}
+
+{% block content %}
+<div id="calib-alarm" style="display:none; position:fixed; inset:0; background:rgba(239,68,68,0.92); z-index:999; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="font-size:6rem; font-weight:900; color:#fff; animation:pulse 0.6s infinite alternate;">⏰</div>
+    <div style="font-size:3rem; font-weight:800; color:#fff; margin-top:1rem;">CALIBRATION TIME IS UP!</div>
+</div>
+
+<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:2rem; text-align:center; padding:2rem;">
+
+    <div style="font-size:1.2rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.2rem;">Calibration Timer</div>
+
+    <div id="calib-timer" style="font-size:10rem; font-weight:900; font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-0.02em;">10:00</div>
+
+    <div style="display:flex; gap:4rem; margin-top:1rem;">
+        <div style="text-align:center;">
+            <div style="font-size:1rem; opacity:0.5; text-transform:uppercase; letter-spacing:0.15rem; margin-bottom:0.5rem;">Track A</div>
+            <div id="calib-team-a" style="font-size:2rem; font-weight:700;">—</div>
+        </div>
+        <div style="width:1px; background:rgba(255,255,255,0.15);"></div>
+        <div style="text-align:center;">
+            <div style="font-size:1rem; opacity:0.5; text-transform:uppercase; letter-spacing:0.15rem; margin-bottom:0.5rem;">Track B</div>
+            <div id="calib-team-b" style="font-size:2rem; font-weight:700;">—</div>
+        </div>
+    </div>
+
+    <div id="calib-status" style="font-size:1rem; opacity:0.4; margin-top:0.5rem;">WAITING TO START</div>
+</div>
+
+<style>
+@keyframes pulse { from { opacity:1; transform:scale(1); } to { opacity:0.7; transform:scale(1.05); } }
+</style>
+
+<script>
+let alarmShown = false;
+
+function fmtTime(sec) {
+    sec = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+async function poll() {
+    try {
+        const r = await fetch('/api/calibration/state/');
+        const d = await r.json();
+
+        document.getElementById('calib-timer').textContent = fmtTime(d.remaining);
+        document.getElementById('calib-team-a').textContent = d.team_a ? `#${d.team_a.number} ${d.team_a.name}` : '—';
+        document.getElementById('calib-team-b').textContent = d.team_b ? `#${d.team_b.number} ${d.team_b.name}` : '—';
+
+        const statusEl = document.getElementById('calib-status');
+        if (d.is_finished && !alarmShown) {
+            alarmShown = true;
+            document.getElementById('calib-alarm').style.display = 'flex';
+            statusEl.textContent = 'TIME UP';
+        } else if (d.is_running) {
+            statusEl.textContent = 'RUNNING';
+            alarmShown = false;
+            document.getElementById('calib-alarm').style.display = 'none';
+        } else if (d.remaining >= 600) {
+            statusEl.textContent = 'WAITING TO START';
+        } else {
+            statusEl.textContent = 'PAUSED';
+        }
+    } catch(e) {}
+    setTimeout(poll, 500);
+}
+
+poll();
+</script>
+{% endblock %}

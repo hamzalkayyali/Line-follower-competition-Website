@@ -52,6 +52,33 @@ class MatchRun(models.Model):
         return f"{self.team} — {self.round_type} {self.try_number} ({self.total_time}s)"
 
 
+class CalibrationSession(models.Model):
+    """Stores the shared calibration timer state."""
+    started_at = models.DateTimeField(null=True, blank=True)
+    is_running = models.BooleanField(default=False)
+    elapsed_before_pause = models.FloatField(default=0.0)  # seconds accumulated before last pause
+    duration = models.FloatField(default=600.0)  # 10 minutes in seconds
+    team_a = models.ForeignKey('Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='calib_track_a')
+    team_b = models.ForeignKey('Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='calib_track_b')
+
+    @property
+    def remaining_seconds(self):
+        from django.utils import timezone
+        if self.is_running and self.started_at:
+            elapsed = self.elapsed_before_pause + (timezone.now() - self.started_at).total_seconds()
+        else:
+            elapsed = self.elapsed_before_pause
+        remaining = self.duration - elapsed
+        return max(remaining, 0.0)
+
+    @property
+    def is_finished(self):
+        return self.remaining_seconds <= 0
+
+    class Meta:
+        verbose_name = 'Calibration Session'
+
+
 class ActiveRun(models.Model):
     """Tracks which team is currently on each track for the display page"""
     TRACK_CHOICES = [('A', 'Track A'), ('B', 'Track B')]
