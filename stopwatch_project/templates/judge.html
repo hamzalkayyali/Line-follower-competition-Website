@@ -167,6 +167,22 @@
                 Total Penalty Time: <span id="total-penalty-time" style="color: var(--accent-gold); font-weight: bold;">+0.0s</span>
             </div>
 
+            <!-- Finished / Checkpoints -->
+            <div class="form-group">
+                <div class="checkbox-group" style="margin-bottom:0;">
+                    <input type="checkbox" id="robot-finished" checked onchange="toggleCheckpoints()">
+                    <div>
+                        <span class="check-label">Robot Finished the Track</span>
+                        <span class="check-hint">Uncheck if the robot did not complete the full track.</span>
+                    </div>
+                </div>
+                <div id="checkpoints-row" style="display:none; margin-top:12px;">
+                    <label for="checkpoints-input">Checkpoints Reached</label>
+                    <input type="number" id="checkpoints-input" placeholder="e.g. 3" min="0" value="0"
+                           style="width:100%; margin-top:6px;">
+                </div>
+            </div>
+
             <!-- Player Confirmation -->
             <div class="form-group">
                 <div class="checkbox-group">

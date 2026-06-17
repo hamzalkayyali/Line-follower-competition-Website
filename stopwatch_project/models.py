@@ -35,13 +35,16 @@ class MatchRun(models.Model):
     raw_time = models.FloatField(default=0.0)  # Time recorded by stopwatch
     track_damage_penalties = models.IntegerField(default=0)  # Adds 4s each
     human_penalties = models.IntegerField(default=0)  # Adds 2s each
-    
+    finished = models.BooleanField(default=True)  # Did the robot finish the track?
+    checkpoints_reached = models.IntegerField(default=0)  # Only relevant if not finished
+
     player_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
     def total_time(self):
-        """Automatically adds penalties directly onto total time"""
+        if not self.finished:
+            return 9999.99  # DNF always ranks last
         return self.raw_time + (self.track_damage_penalties * 4.0) + (self.human_penalties * 2.0)
 
     class Meta:

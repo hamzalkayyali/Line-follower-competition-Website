@@ -120,6 +120,8 @@ async function submitRun(event) {
     const track = document.querySelector('input[name="track"]:checked').value;
     const rawTime = parseFloat(document.getElementById('time-input').value);
     const confirmed = document.getElementById('player-confirmed').checked;
+    const finished = document.getElementById('robot-finished').checked;
+    const checkpoints = parseInt(document.getElementById('checkpoints-input').value) || 0;
 
     // Validation
     if (!teamId) {
@@ -151,7 +153,9 @@ async function submitRun(event) {
                 raw_time: rawTime,
                 track_damage_penalties: trackDamageCount,
                 human_penalties: humanPenaltyCount,
-                player_confirmed: confirmed
+                player_confirmed: confirmed,
+                finished: finished,
+                checkpoints_reached: checkpoints
             })
         });
 
@@ -222,6 +226,11 @@ async function deleteRunResult() {
     }
 }
 
+function toggleCheckpoints() {
+    const finished = document.getElementById('robot-finished').checked;
+    document.getElementById('checkpoints-row').style.display = finished ? 'none' : 'block';
+}
+
 function resetForm() {
     document.getElementById('run-form').reset();
     trackDamageCount = 0;
@@ -229,6 +238,9 @@ function resetForm() {
     document.getElementById('track-penalty-count').textContent = '0';
     document.getElementById('human-penalty-count').textContent = '0';
     document.getElementById('total-penalty-time').textContent = '+0.0s';
+    document.getElementById('robot-finished').checked = true;
+    document.getElementById('checkpoints-row').style.display = 'none';
+    document.getElementById('checkpoints-input').value = '0';
 }
 
 // ============================================================

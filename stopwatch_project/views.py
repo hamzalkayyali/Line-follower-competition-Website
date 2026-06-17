@@ -185,6 +185,8 @@ def api_submit_run(request):
     track_damage = data.get('track_damage_penalties', 0)
     human_penalties = data.get('human_penalties', 0)
     player_confirmed = data.get('player_confirmed', False)
+    finished = data.get('finished', True)
+    checkpoints_reached = data.get('checkpoints_reached', 0)
 
     # Validate
     if not all([team_id, round_type, try_number, track, raw_time is not None]):
@@ -209,6 +211,8 @@ def api_submit_run(request):
             'track_damage_penalties': int(track_damage),
             'human_penalties': int(human_penalties),
             'player_confirmed': player_confirmed,
+            'finished': bool(finished),
+            'checkpoints_reached': int(checkpoints_reached),
         }
     )
 
