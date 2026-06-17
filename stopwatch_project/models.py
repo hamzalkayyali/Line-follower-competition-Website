@@ -43,9 +43,10 @@ class MatchRun(models.Model):
 
     @property
     def total_time(self):
+        base = self.raw_time + (self.track_damage_penalties * 4.0) + (self.human_penalties * 2.0)
         if not self.finished:
-            return 9999.99  # DNF always ranks last
-        return self.raw_time + (self.track_damage_penalties * 4.0) + (self.human_penalties * 2.0)
+            base += 240.0  # +4 minutes penalty for DNF
+        return base
 
     class Meta:
         # Prevent duplicate entries for the same team/round/try combo

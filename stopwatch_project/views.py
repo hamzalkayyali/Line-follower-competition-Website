@@ -123,6 +123,8 @@ def api_leaderboard(request):
 
         r1_try1 = r1_try1_run.total_time if r1_try1_run else None
         r1_try2 = r1_try2_run.total_time if r1_try2_run else None
+        r1_try1_dnf = (r1_try1_run and not r1_try1_run.finished) if r1_try1_run else False
+        r1_try2_dnf = (r1_try2_run and not r1_try2_run.finished) if r1_try2_run else False
         r1_best = team.round1_best
         r1_best_checkpoints = max(
             (r.checkpoints_reached for r in [r1_try1_run, r1_try2_run] if r and not r.finished),
@@ -135,7 +137,10 @@ def api_leaderboard(request):
             'team_name': team.team_name,
             'round1_try1': r1_try1,
             'round1_try2': r1_try2,
+            'round1_try1_dnf': r1_try1_dnf,
+            'round1_try2_dnf': r1_try2_dnf,
             'round1_best': r1_best,
+            'round1_best_dnf': r1_try1_dnf and r1_try2_dnf,
             'best_checkpoints': r1_best_checkpoints,
         })
 
@@ -146,6 +151,8 @@ def api_leaderboard(request):
         if r2_try1_run or r2_try2_run:
             r2_try1 = r2_try1_run.total_time if r2_try1_run else None
             r2_try2 = r2_try2_run.total_time if r2_try2_run else None
+            r2_try1_dnf = (not r2_try1_run.finished) if r2_try1_run else False
+            r2_try2_dnf = (not r2_try2_run.finished) if r2_try2_run else False
             r2_best = team.round2_best
             r2_best_checkpoints = max(
                 (r.checkpoints_reached for r in [r2_try1_run, r2_try2_run] if r and not r.finished),
@@ -159,7 +166,10 @@ def api_leaderboard(request):
                 'round1_best': r1_best,
                 'round2_try1': r2_try1,
                 'round2_try2': r2_try2,
+                'round2_try1_dnf': r2_try1_dnf,
+                'round2_try2_dnf': r2_try2_dnf,
                 'round2_best': r2_best,
+                'round2_best_dnf': r2_try1_dnf and r2_try2_dnf,
                 'best_checkpoints': r2_best_checkpoints,
             })
 
