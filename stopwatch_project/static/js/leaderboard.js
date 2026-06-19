@@ -95,7 +95,7 @@ async function fetchActiveRunForMini() {
             const trackKey = run.track === 'A' ? 'track1' : 'track2';
             const teamEl = document.getElementById(miniTracks[trackKey].teamEl);
             if (run.team_name) {
-                teamEl.textContent = `#${run.team_number} ${run.team_name}`;
+                teamEl.textContent = run.team_name;
                 teamEl.style.color = 'var(--accent-gold)';
             } else {
                 teamEl.textContent = '—';
@@ -142,14 +142,13 @@ function renderRound1(teams) {
                 <td><span class="rank-badge ${badgeClass}">${rank}</span></td>
                 <td>
                     <div class="team-info">
-                        <span class="team-number">#${team.team_number}</span>
                         <span class="team-name">${team.team_name}</span>
                     </div>
                 </td>
                 <td class="time-cell ${!try1 ? 'empty' : ''}">${fmt1}</td>
                 <td class="time-cell ${!try2 ? 'empty' : ''}">${fmt2}</td>
                 <td class="time-cell ${best && best < 9999 ? 'best' : 'empty'}">${fmtBest}</td>
-                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}">${team.best_checkpoints || '—'}</td>
+                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}" style="text-align:center;">${team.best_checkpoints || '—'}</td>
             </tr>
         `;
     }).join('');
@@ -181,7 +180,6 @@ function renderRound2(teams) {
                 <td><span class="rank-badge ${getRankClass(rank)}">${rank}</span></td>
                 <td>
                     <div class="team-info">
-                        <span class="team-number">#${team.team_number}</span>
                         <span class="team-name">${team.team_name}</span>
                     </div>
                 </td>
@@ -189,7 +187,7 @@ function renderRound2(teams) {
                 <td class="time-cell ${!try1 ? 'empty' : ''}">${fmt1}</td>
                 <td class="time-cell ${!try2 ? 'empty' : ''}">${fmt2}</td>
                 <td class="time-cell ${best && best < 9999 ? 'best' : 'empty'}">${fmtBest}</td>
-                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}">${team.best_checkpoints || '—'}</td>
+                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}" style="text-align:center;">${team.best_checkpoints || '—'}</td>
             </tr>
         `;
     }).join('');

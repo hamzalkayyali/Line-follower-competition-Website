@@ -216,15 +216,12 @@ async function loadTeamList() {
         badge.textContent = `${data.teams.length} teams`;
 
         if (data.teams.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted" style="padding:16px;">No teams added yet. Add your first team above.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted" style="padding:16px;">No teams added yet. Add your first team above.</td></tr>';
             return;
         }
 
         tbody.innerHTML = data.teams.map((team, i) => `
             <tr style="animation-delay: ${(i * 0.04).toFixed(2)}s">
-                <td>
-                    <span class="team-number">#${team.team_number}</span>
-                </td>
                 <td>
                     <span class="team-name">${team.team_name}</span>
                 </td>

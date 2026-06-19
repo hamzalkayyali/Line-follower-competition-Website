@@ -125,7 +125,7 @@ async function fetchActiveRunDisplay() {
             const prefix = run.track === 'A' ? 'display-a' : 'display-b';
 
             if (run.team_name) {
-                document.getElementById(`${prefix}-team-num`).textContent = `TEAM #${run.team_number}`;
+                document.getElementById(`${prefix}-team-num`).textContent = '';
                 document.getElementById(`${prefix}-team-name`).textContent = run.team_name;
 
                 // Show round/try info
