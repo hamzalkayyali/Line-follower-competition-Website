@@ -7,10 +7,11 @@ from django.shortcuts import render, redirect # pyright: ignore[reportMissingMod
 # pyrefly: ignore [missing-import]
 from django.views.decorators.csrf import csrf_exempt # pyright: ignore[reportMissingModuleSource]
 from django.utils import timezone # pyright: ignore[reportMissingModuleSource]
-from .models import Team, MatchRun, ActiveRun, CalibrationSession
+from .models import Team, MatchRun, ActiveRun, CalibrationSession, CompetitionState
 
 JUDGE_PIN = os.environ.get('JUDGE_PIN', '1234')
 ORGANIZER_PIN = os.environ.get('ORGANIZER_PIN', '0000')
+ADMIN_PIN = os.environ.get('ADMIN_PIN', '9999')
 
 # Total checkpoints on each track, used to auto-fill checkpoints_reached when a robot finishes
 TRACK_CHECKPOINTS = {'round1': 5, 'round2': 3}
@@ -101,7 +102,8 @@ def api_teams(request):
             {
                 'id': t.id,
                 'team_number': t.team_number,
-                'team_name': t.team_name
+                'team_name': t.team_name,
+                'qualified': t.qualified,
             }
             for t in teams
         ]
@@ -219,6 +221,10 @@ def api_submit_run(request):
     if not all([team_id, round_type, try_number, track, raw_time is not None]):
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
+    state, _ = CompetitionState.objects.get_or_create(id=1)
+    if round_type == 'round1' and state.qualification_locked:
+        return JsonResponse({'error': 'Qualification Stage is locked. Ask an admin to unlock it.'}, status=403)
+
     try:
         team = Team.objects.get(id=team_id)
     except Team.DoesNotExist:
@@ -281,6 +287,10 @@ def api_delete_run(request):
 
     if not all([team_id, round_type, try_number]):
         return JsonResponse({'error': 'team_id, round_type, and try_number are required'}, status=400)
+
+    state, _ = CompetitionState.objects.get_or_create(id=1)
+    if round_type == 'round1' and state.qualification_locked:
+        return JsonResponse({'error': 'Qualification Stage is locked. Ask an admin to unlock it.'}, status=403)
 
     try:
         run = MatchRun.objects.get(team_id=team_id, round_type=round_type, try_number=try_number)
@@ -596,3 +606,148 @@ def api_calibration_set_teams(request):
     s.team_b = Team.objects.get(id=team_b_id) if team_b_id else None
     s.save()
     return JsonResponse({'success': True})
+
+
+# ============================================================
+# ADMIN — Login / Logout
+# ============================================================
+def admin_login(request):
+    if request.session.get('is_admin'):
+        return redirect('admin_dashboard')
+    error = None
+    if request.method == 'POST':
+        if request.POST.get('pin') == ADMIN_PIN:
+            request.session['is_admin'] = True
+            return redirect('admin_dashboard')
+        error = 'Wrong PIN. Try again.'
+    return render(request, 'admin_login.html', {'error': error})
+
+
+def admin_logout(request):
+    request.session.pop('is_admin', None)
+    return redirect('leaderboard')
+
+
+def admin_dashboard(request):
+    if not request.session.get('is_admin'):
+        return redirect('admin_login')
+    return render(request, 'admin_dashboard.html')
+
+
+# ============================================================
+# ADMIN — API
+# ============================================================
+def api_admin_state(request):
+    state, _ = CompetitionState.objects.get_or_create(id=1)
+    return JsonResponse({'qualification_locked': state.qualification_locked})
+
+
+@csrf_exempt
+def api_admin_end_qualification(request):
+    """Locks Qualification Stage submissions and marks the Top 8 teams as qualified."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    teams = list(Team.objects.all())
+    ranked = []
+    for team in teams:
+        best = team.round1_best
+        runs = team.runs.filter(round_type='round1')
+        checkpoints = max((r.checkpoints_reached for r in runs), default=0)
+        ranked.append((team, best, checkpoints))
+
+    ranked.sort(key=lambda x: (x[1], -x[2]))
+    top8_ids = {t.id for t, _, _ in ranked[:8]}
+
+    for team in teams:
+        team.qualified = team.id in top8_ids
+        team.save()
+
+    state, _ = CompetitionState.objects.get_or_create(id=1)
+    state.qualification_locked = True
+    state.save()
+
+    return JsonResponse({'success': True, 'qualified_team_ids': list(top8_ids)})
+
+
+@csrf_exempt
+def api_admin_unlock_qualification(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    state, _ = CompetitionState.objects.get_or_create(id=1)
+    state.qualification_locked = False
+    state.save()
+    return JsonResponse({'success': True})
+
+
+def api_admin_runs(request):
+    """Returns every submitted run with team info, for the admin log/edit table."""
+    runs = MatchRun.objects.select_related('team').order_by('-created_at')
+    data = [
+        {
+            'id': r.id,
+            'team_id': r.team.id,
+            'team_name': r.team.team_name,
+            'round_type': r.round_type,
+            'try_number': r.try_number,
+            'track': r.track,
+            'raw_time': r.raw_time,
+            'track_damage_penalties': r.track_damage_penalties,
+            'human_penalties': r.human_penalties,
+            'finished': r.finished,
+            'checkpoints_reached': r.checkpoints_reached,
+            'total_time': r.total_time,
+            'created_at': r.created_at.isoformat(),
+        }
+        for r in runs
+    ]
+    return JsonResponse({'runs': data})
+
+
+@csrf_exempt
+def api_admin_edit_run(request):
+    """Admin edits any field of any submitted run."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    run_id = data.get('run_id')
+    try:
+        run = MatchRun.objects.get(id=run_id)
+    except MatchRun.DoesNotExist:
+        return JsonResponse({'error': 'Run not found'}, status=404)
+
+    if 'raw_time' in data:
+        run.raw_time = float(data['raw_time'])
+    if 'track_damage_penalties' in data:
+        run.track_damage_penalties = int(data['track_damage_penalties'])
+    if 'human_penalties' in data:
+        run.human_penalties = int(data['human_penalties'])
+    if 'finished' in data:
+        run.finished = bool(data['finished'])
+    if 'checkpoints_reached' in data:
+        run.checkpoints_reached = int(data['checkpoints_reached'])
+
+    run.save()
+    return JsonResponse({'success': True, 'total_time': run.total_time})
+
+
+@csrf_exempt
+def api_admin_delete_run(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    run_id = data.get('run_id')
+    try:
+        run = MatchRun.objects.get(id=run_id)
+        run.delete()
+        return JsonResponse({'success': True})
+    except MatchRun.DoesNotExist:
+        return JsonResponse({'error': 'Run not found'}, status=404)

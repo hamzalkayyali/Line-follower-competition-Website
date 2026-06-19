@@ -24,29 +24,33 @@ function changePenalty(type, delta) {
 // ============================================================
 // LOAD TEAMS INTO DROPDOWNS
 // ============================================================
+let allTeams = [];
+
 async function loadTeams() {
     try {
         const response = await fetch('/api/teams/');
         const data = await response.json();
-
-        const selects = ['team-select'];
-        for (const selectId of selects) {
-            const select = document.getElementById(selectId);
-            // Keep the first placeholder option
-            const placeholder = select.options[0];
-            select.innerHTML = '';
-            select.appendChild(placeholder);
-
-            for (const team of data.teams) {
-                const option = document.createElement('option');
-                option.value = team.id;
-                option.textContent = team.team_name;
-                select.appendChild(option);
-            }
-        }
+        allTeams = data.teams;
+        populateTeamSelect();
     } catch (err) {
         console.error('Failed to load teams:', err);
         showToast('Failed to load teams', 'error');
+    }
+}
+
+function populateTeamSelect() {
+    const roundType = document.querySelector('input[name="round"]:checked')?.value || 'round1';
+    const select = document.getElementById('team-select');
+    const placeholder = select.options[0];
+    select.innerHTML = '';
+    select.appendChild(placeholder);
+
+    const teamsToShow = roundType === 'round2' ? allTeams.filter(t => t.qualified) : allTeams;
+    for (const team of teamsToShow) {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.team_name;
+        select.appendChild(option);
     }
 }
 

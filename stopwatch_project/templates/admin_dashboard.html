@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div style="max-width:1100px; margin:3rem auto; padding:0 1rem;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+        <h2 style="margin:0;">Admin Dashboard</h2>
+        <a href="{% url 'admin_logout' %}" style="opacity:0.5; font-size:0.85rem;">Log out</a>
+    </div>
+
+    <!-- Qualification Lock Status -->
+    <div id="lock-banner" style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <div>
+            <div id="lock-status-text" style="font-size:1.1rem; font-weight:700;">Loading...</div>
+            <div style="opacity:0.5; font-size:0.85rem; margin-top:0.25rem;">
+                Ending Qualification Stage locks further submissions and marks the Top 8 teams as eligible for Finals.
+            </div>
+        </div>
+        <div style="display:flex; gap:0.75rem;">
+            <button id="btn-end-qual" onclick="endQualification()"
+                style="padding:0.75rem 1.25rem; border-radius:8px; border:none; background:#ef4444; color:#fff; font-weight:700; cursor:pointer;">
+                End Qualification Stage
+            </button>
+            <button id="btn-unlock-qual" onclick="unlockQualification()"
+                style="padding:0.75rem 1.25rem; border-radius:8px; border:2px solid #f59e0b; background:transparent; color:#f59e0b; font-weight:700; cursor:pointer;">
+                Unlock
+            </button>
+        </div>
+    </div>
+
+    <!-- Qualification Scores -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <h3 style="margin:0 0 1rem;">Qualification Stage Scores</h3>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead>
+                    <tr style="text-align:left; opacity:0.5; font-size:0.8rem;">
+                        <th style="padding:0.5rem;">Rank</th>
+                        <th style="padding:0.5rem;">Team</th>
+                        <th style="padding:0.5rem;">Try 1</th>
+                        <th style="padding:0.5rem;">Try 2</th>
+                        <th style="padding:0.5rem;">Best Time</th>
+                        <th style="padding:0.5rem; text-align:center;">Checkpoints</th>
+                        <th style="padding:0.5rem; text-align:center;">Qualified</th>
+                    </tr>
+                </thead>
+                <tbody id="qual-scores-body">
+                    <tr><td colspan="7" style="padding:1rem; text-align:center; opacity:0.5;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Finals Scores -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <h3 style="margin:0 0 1rem;">Finals Scores</h3>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead>
+                    <tr style="text-align:left; opacity:0.5; font-size:0.8rem;">
+                        <th style="padding:0.5rem;">Rank</th>
+                        <th style="padding:0.5rem;">Team</th>
+                        <th style="padding:0.5rem;">Q. Best</th>
+                        <th style="padding:0.5rem;">Try 1</th>
+                        <th style="padding:0.5rem;">Try 2</th>
+                        <th style="padding:0.5rem;">Best Time</th>
+                        <th style="padding:0.5rem; text-align:center;">Checkpoints</th>
+                    </tr>
+                </thead>
+                <tbody id="finals-scores-body">
+                    <tr><td colspan="7" style="padding:1rem; text-align:center; opacity:0.5;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Full Run Log (editable) -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <h3 style="margin:0 0 1rem;">All Submitted Runs (editable)</h3>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <thead>
+                    <tr style="text-align:left; opacity:0.5; font-size:0.75rem;">
+                        <th style="padding:0.4rem;">Team</th>
+                        <th style="padding:0.4rem;">Stage</th>
+                        <th style="padding:0.4rem;">Try</th>
+                        <th style="padding:0.4rem;">Track</th>
+                        <th style="padding:0.4rem;">Time (s)</th>
+                        <th style="padding:0.4rem;">Track Dmg</th>
+                        <th style="padding:0.4rem;">Human Pen</th>
+                        <th style="padding:0.4rem; text-align:center;">Finished</th>
+                        <th style="padding:0.4rem;">Checkpoints</th>
+                        <th style="padding:0.4rem;">Total</th>
+                        <th style="padding:0.4rem;"></th>
+                    </tr>
+                </thead>
+                <tbody id="runs-body">
+                    <tr><td colspan="11" style="padding:1rem; text-align:center; opacity:0.5;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function fmtTime(seconds) {
+    if (!seconds || seconds <= 0 || seconds >= 9999) return '—';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.round((seconds % 1) * 100);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+}
+
+function getCookie(name) {
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+}
+
+// ===== Lock status =====
+async function loadLockState() {
+    try {
+        const r = await fetch('/api/admin/state/');
+        const d = await r.json();
+        const text = document.getElementById('lock-status-text');
+        const btnEnd = document.getElementById('btn-end-qual');
+        const btnUnlock = document.getElementById('btn-unlock-qual');
+        if (d.qualification_locked) {
+            text.textContent = '🔒 Qualification Stage: LOCKED';
+            text.style.color = '#ef4444';
+            btnEnd.style.display = 'none';
+            btnUnlock.style.display = 'inline-block';
+        } else {
+            text.textContent = '🟢 Qualification Stage: OPEN';
+            text.style.color = '#22c55e';
+            btnEnd.style.display = 'inline-block';
+            btnUnlock.style.display = 'none';
+        }
+    } catch (e) {}
+}
+
+async function endQualification() {
+    if (!confirm('End Qualification Stage? This locks further Qualification submissions and marks the Top 8 teams as eligible for Finals.')) return;
+    try {
+        const r = await fetch('/api/admin/end-qualification/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
+        const d = await r.json();
+        if (d.success) {
+            showToast('Qualification Stage ended — Top 8 marked qualified!');
+            loadLockState();
+            loadScores();
+        } else {
+            showToast(d.error || 'Failed', 'error');
+        }
+    } catch (e) {
+        showToast('Network error', 'error');
+    }
+}
+
+async function unlockQualification() {
+    if (!confirm('Unlock Qualification Stage? Judges will be able to submit/edit Qualification runs again.')) return;
+    try {
+        const r = await fetch('/api/admin/unlock-qualification/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
+        const d = await r.json();
+        if (d.success) {
+            showToast('Qualification Stage unlocked');
+            loadLockState();
+        }
+    } catch (e) {
+        showToast('Network error', 'error');
+    }
+}
+
+// ===== Scores tables =====
+async function loadScores() {
+    try {
+        const r = await fetch('/api/leaderboard/');
+        const d = await r.json();
+        renderQualScores(d.round1);
+        renderFinalsScores(d.round2);
+    } catch (e) {}
+}
+
+async function loadTeamsQualified() {
+    try {
+        const r = await fetch('/api/teams/');
+        const d = await r.json();
+        const map = {};
+        d.teams.forEach(t => map[t.id] = t.qualified);
+        return map;
+    } catch (e) {
+        return {};
+    }
+}
+
+async function renderQualScores(teams) {
+    const tbody = document.getElementById('qual-scores-body');
+    if (!teams || teams.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding:1rem; text-align:center; opacity:0.5;">No teams yet.</td></tr>';
+        return;
+    }
+    const qualifiedMap = await loadTeamsQualified();
+    teams.sort((a, b) => a.round1_best - b.round1_best || (b.best_checkpoints || 0) - (a.best_checkpoints || 0));
+    tbody.innerHTML = teams.map((team, i) => {
+        const rank = i + 1;
+        const best = team.round1_best;
+        const isQualified = qualifiedMap[team.team_id];
+        return `
+            <tr style="border-top:1px solid #333;">
+                <td style="padding:0.5rem;">${rank}</td>
+                <td style="padding:0.5rem;">${team.team_name}</td>
+                <td style="padding:0.5rem;">${team.round1_try1 ? fmtTime(team.round1_try1) : '—'}</td>
+                <td style="padding:0.5rem;">${team.round1_try2 ? fmtTime(team.round1_try2) : '—'}</td>
+                <td style="padding:0.5rem; font-weight:700;">${best && best < 9999 ? fmtTime(best) : '—'}</td>
+                <td style="padding:0.5rem; text-align:center;">${team.best_checkpoints || '—'}</td>
+                <td style="padding:0.5rem; text-align:center;">${isQualified ? '✅' : ''}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderFinalsScores(teams) {
+    const tbody = document.getElementById('finals-scores-body');
+    if (!teams || teams.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding:1rem; text-align:center; opacity:0.5;">Awaiting Finals runs.</td></tr>';
+        return;
+    }
+    teams.sort((a, b) => a.round2_best - b.round2_best || (b.best_checkpoints || 0) - (a.best_checkpoints || 0));
+    tbody.innerHTML = teams.map((team, i) => {
+        const rank = i + 1;
+        const best = team.round2_best;
+        return `
+            <tr style="border-top:1px solid #333;">
+                <td style="padding:0.5rem;">${rank}</td>
+                <td style="padding:0.5rem;">${team.team_name}</td>
+                <td style="padding:0.5rem;">${team.round1_best && team.round1_best < 9999 ? fmtTime(team.round1_best) : '—'}</td>
+                <td style="padding:0.5rem;">${team.round2_try1 ? fmtTime(team.round2_try1) : '—'}</td>
+                <td style="padding:0.5rem;">${team.round2_try2 ? fmtTime(team.round2_try2) : '—'}</td>
+                <td style="padding:0.5rem; font-weight:700;">${best && best < 9999 ? fmtTime(best) : '—'}</td>
+                <td style="padding:0.5rem; text-align:center;">${team.best_checkpoints || '—'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ===== Run log (editable) =====
+async function loadRuns() {
+    try {
+        const r = await fetch('/api/admin/runs/');
+        const d = await r.json();
+        renderRuns(d.runs);
+    } catch (e) {}
+}
+
+function renderRuns(runs) {
+    const tbody = document.getElementById('runs-body');
+    if (!runs || runs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="padding:1rem; text-align:center; opacity:0.5;">No runs submitted yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = runs.map(run => `
+        <tr style="border-top:1px solid #333;" data-run-id="${run.id}">
+            <td style="padding:0.4rem;">${run.team_name}</td>
+            <td style="padding:0.4rem;">${run.round_type === 'round1' ? 'Qual' : 'Finals'}</td>
+            <td style="padding:0.4rem;">${run.try_number === 'try1' ? '1' : '2'}</td>
+            <td style="padding:0.4rem;">${run.track}</td>
+            <td style="padding:0.4rem;"><input type="number" step="0.01" value="${run.raw_time}" class="edit-raw-time" style="width:70px; background:#111; color:#fff; border:1px solid #333; border-radius:4px; padding:0.25rem;"></td>
+            <td style="padding:0.4rem;"><input type="number" value="${run.track_damage_penalties}" class="edit-track-dmg" style="width:50px; background:#111; color:#fff; border:1px solid #333; border-radius:4px; padding:0.25rem;"></td>
+            <td style="padding:0.4rem;"><input type="number" value="${run.human_penalties}" class="edit-human-pen" style="width:50px; background:#111; color:#fff; border:1px solid #333; border-radius:4px; padding:0.25rem;"></td>
+            <td style="padding:0.4rem; text-align:center;"><input type="checkbox" class="edit-finished" ${run.finished ? 'checked' : ''}></td>
+            <td style="padding:0.4rem;"><input type="number" value="${run.checkpoints_reached}" class="edit-checkpoints" style="width:50px; background:#111; color:#fff; border:1px solid #333; border-radius:4px; padding:0.25rem;"></td>
+            <td style="padding:0.4rem; font-weight:700;">${fmtTime(run.total_time)}</td>
+            <td style="padding:0.4rem; white-space:nowrap;">
+                <button onclick="saveRun(${run.id})" style="padding:0.3rem 0.6rem; border-radius:6px; border:none; background:#6366f1; color:#fff; cursor:pointer; font-size:0.75rem;">Save</button>
+                <button onclick="deleteRun(${run.id})" style="padding:0.3rem 0.6rem; border-radius:6px; border:2px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; font-size:0.75rem;">Del</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function saveRun(runId) {
+    const row = document.querySelector(`tr[data-run-id="${runId}"]`);
+    const payload = {
+        run_id: runId,
+        raw_time: parseFloat(row.querySelector('.edit-raw-time').value),
+        track_damage_penalties: parseInt(row.querySelector('.edit-track-dmg').value),
+        human_penalties: parseInt(row.querySelector('.edit-human-pen').value),
+        finished: row.querySelector('.edit-finished').checked,
+        checkpoints_reached: parseInt(row.querySelector('.edit-checkpoints').value),
+    };
+    try {
+        const r = await fetch('/api/admin/edit-run/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify(payload)
+        });
+        const d = await r.json();
+        if (d.success) {
+            showToast('Run updated!');
+            loadRuns();
+            loadScores();
+        } else {
+            showToast(d.error || 'Failed to save', 'error');
+        }
+    } catch (e) {
+        showToast('Network error', 'error');
+    }
+}
+
+async function deleteRun(runId) {
+    if (!confirm('Delete this run? This cannot be undone.')) return;
+    try {
+        const r = await fetch('/api/admin/delete-run/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({ run_id: runId })
+        });
+        const d = await r.json();
+        if (d.success) {
+            showToast('Run deleted');
+            loadRuns();
+            loadScores();
+        } else {
+            showToast(d.error || 'Failed to delete', 'error');
+        }
+    } catch (e) {
+        showToast('Network error', 'error');
+    }
+}
+
+// ===== Init =====
+loadLockState();
+loadScores();
+loadRuns();
+</script>
+{% endblock %}

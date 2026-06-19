@@ -17,6 +17,14 @@ urlpatterns = [
     path('api/calibration/reset/', views.api_calibration_reset, name='api_calibration_reset'),
     path('api/calibration/set-teams/', views.api_calibration_set_teams, name='api_calibration_set_teams'),
 
+    # Admin API (must be before the generic trigger route)
+    path('api/admin/state/', views.api_admin_state, name='api_admin_state'),
+    path('api/admin/end-qualification/', views.api_admin_end_qualification, name='api_admin_end_qualification'),
+    path('api/admin/unlock-qualification/', views.api_admin_unlock_qualification, name='api_admin_unlock_qualification'),
+    path('api/admin/runs/', views.api_admin_runs, name='api_admin_runs'),
+    path('api/admin/edit-run/', views.api_admin_edit_run, name='api_admin_edit_run'),
+    path('api/admin/delete-run/', views.api_admin_delete_run, name='api_admin_delete_run'),
+
     # API — Stopwatch state (ESP32 integration)
     path('api/state/', views.get_state, name='get_state'),
     path('api/<str:track>/<str:action>/', views.trigger_event, name='trigger_event'),
@@ -38,5 +46,10 @@ urlpatterns = [
     path('calibration/control/', views.calibration_control, name='calibration_control'),
     path('calibration/login/', views.calibration_login, name='calibration_login'),
     path('calibration/logout/', views.calibration_logout, name='calibration_logout'),
+
+    # Admin pages
+    path('admin-panel/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-panel/login/', views.admin_login, name='admin_login'),
+    path('admin-panel/logout/', views.admin_logout, name='admin_logout'),
 
 ]

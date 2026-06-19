@@ -4,7 +4,8 @@ from django.db import models
 class Team(models.Model):
     team_number = models.IntegerField(unique=True)
     team_name = models.CharField(max_length=100)
-    
+    qualified = models.BooleanField(default=False)  # Set when Qualification Stage ends (Top 8)
+
     def __str__(self):
         return f"#{self.team_number} - {self.team_name}"
 
@@ -54,6 +55,14 @@ class MatchRun(models.Model):
 
     def __str__(self):
         return f"{self.team} — {self.round_type} {self.try_number} ({self.total_time}s)"
+
+
+class CompetitionState(models.Model):
+    """Singleton row tracking whether Qualification Stage submissions are locked."""
+    qualification_locked = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Competition State'
 
 
 class CalibrationSession(models.Model):
