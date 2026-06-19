@@ -119,7 +119,7 @@ function getRankClass(rank) {
 function renderRound1(teams) {
     const tbody = document.getElementById('round1-body');
     if (!teams || teams.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:24px;">No teams registered yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:24px;">No teams registered yet.</td></tr>';
         return;
     }
 
@@ -149,6 +149,7 @@ function renderRound1(teams) {
                 <td class="time-cell ${!try1 ? 'empty' : ''}">${fmt1}</td>
                 <td class="time-cell ${!try2 ? 'empty' : ''}">${fmt2}</td>
                 <td class="time-cell ${best && best < 9999 ? 'best' : 'empty'}">${fmtBest}</td>
+                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}">${team.best_checkpoints || '—'}</td>
             </tr>
         `;
     }).join('');
@@ -157,7 +158,7 @@ function renderRound1(teams) {
 function renderRound2(teams) {
     const tbody = document.getElementById('round2-body');
     if (!teams || teams.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:24px;">Awaiting qualified teams...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:24px;">Awaiting qualified teams...</td></tr>';
         return;
     }
 
@@ -188,6 +189,7 @@ function renderRound2(teams) {
                 <td class="time-cell ${!try1 ? 'empty' : ''}">${fmt1}</td>
                 <td class="time-cell ${!try2 ? 'empty' : ''}">${fmt2}</td>
                 <td class="time-cell ${best && best < 9999 ? 'best' : 'empty'}">${fmtBest}</td>
+                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}">${team.best_checkpoints || '—'}</td>
             </tr>
         `;
     }).join('');
