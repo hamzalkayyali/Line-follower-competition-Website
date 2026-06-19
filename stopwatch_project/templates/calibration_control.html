@@ -31,71 +31,61 @@
         </button>
     </div>
 
-    <!-- Set Active Run (Display Board) -->
-    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
-        <h3 style="margin:0 0 0.5rem;">▶ Set Active Run (Display Board)</h3>
-        <p style="opacity:0.5; font-size:0.85rem; margin:0 0 1.2rem;">
-            Select the team about to play and click "Set Active" to update the display screen.
-        </p>
+    <!-- Set Active Run (Display Board) — Track A & Track B independent panels -->
+    <div style="display:flex; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+        {% for track_letter in "AB" %}
+        <div style="flex:1; min-width:280px; background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem;">
+            <h3 style="margin:0 0 0.5rem;">▶ Track {{ track_letter }} — Active Run</h3>
+            <p style="opacity:0.5; font-size:0.8rem; margin:0 0 1rem;">
+                Set who's about to play on Track {{ track_letter }}.
+            </p>
 
-        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
-            <div style="flex:1;">
-                <label style="display:block; opacity:0.6; margin-bottom:0.4rem;">Team</label>
-                <select id="active-team" style="width:100%; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
+            <div style="margin-bottom:0.8rem;">
+                <label style="display:block; opacity:0.6; margin-bottom:0.4rem; font-size:0.85rem;">Team</label>
+                <select id="active-team-{{ track_letter }}" style="width:100%; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
                     <option value="">Select team...</option>
                     {% for t in teams %}
                     <option value="{{ t.id }}" data-qualified="{{ t.qualified|yesno:'1,0' }}">{{ t.team_name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div style="flex:1;">
-                <label style="display:block; opacity:0.6; margin-bottom:0.4rem;">Track</label>
-                <div style="display:flex; gap:0.5rem;">
-                    <label style="flex:1; text-align:center; padding:0.6rem; border-radius:8px; border:1px solid #333; cursor:pointer;">
-                        <input type="radio" name="active-track" value="A" checked> Track A
-                    </label>
-                    <label style="flex:1; text-align:center; padding:0.6rem; border-radius:8px; border:1px solid #333; cursor:pointer;">
-                        <input type="radio" name="active-track" value="B"> Track B
-                    </label>
-                </div>
-            </div>
-        </div>
 
-        <div style="display:flex; gap:1rem; margin-bottom:1.2rem;">
-            <div style="flex:1;">
-                <label style="display:block; opacity:0.6; margin-bottom:0.4rem;">Round</label>
+            <div style="margin-bottom:0.8rem;">
+                <label style="display:block; opacity:0.6; margin-bottom:0.4rem; font-size:0.85rem;">Round</label>
                 <div style="display:flex; gap:0.5rem;">
-                    <label style="flex:1; text-align:center; padding:0.6rem; border-radius:8px; border:1px solid #333; cursor:pointer;">
-                        <input type="radio" name="active-round" value="round1" checked onchange="filterActiveTeamSelect()"> Qualification Stage
+                    <label style="flex:1; text-align:center; padding:0.5rem; border-radius:8px; border:1px solid #333; cursor:pointer; font-size:0.85rem;">
+                        <input type="radio" name="active-round-{{ track_letter }}" value="round1" checked onchange="filterActiveTeamSelect('{{ track_letter }}')"> Qualification
                     </label>
-                    <label style="flex:1; text-align:center; padding:0.6rem; border-radius:8px; border:1px solid #333; cursor:pointer;">
-                        <input type="radio" name="active-round" value="round2" onchange="filterActiveTeamSelect()"> Finals
+                    <label style="flex:1; text-align:center; padding:0.5rem; border-radius:8px; border:1px solid #333; cursor:pointer; font-size:0.85rem;">
+                        <input type="radio" name="active-round-{{ track_letter }}" value="round2" onchange="filterActiveTeamSelect('{{ track_letter }}')"> Finals
                     </label>
                 </div>
             </div>
-            <div style="flex:1;">
-                <label style="display:block; opacity:0.6; margin-bottom:0.4rem;">Try</label>
-                <div style="display:flex; gap:0.5rem;">
-                    <label style="flex:1; text-align:center; padding:0.6rem; border-radius:8px; border:1px solid #333; cursor:pointer;">
-                        <input type="radio" name="active-try" value="try1" checked> Try 1
-                    </label>
-                    <label style="flex:1; text-align:center; padding:0.6rem; border-radius:8px; border:1px solid #333; cursor:pointer;">
-                        <input type="radio" name="active-try" value="try2"> Try 2
-                    </label>
-                </div>
-            </div>
-        </div>
 
-        <div style="display:flex; gap:1rem;">
-            <button onclick="setActiveRun()"
-                style="flex:1; padding:0.75rem; border-radius:8px; border:none; background:#6366f1; color:#fff; font-weight:700; cursor:pointer;">
-                Set Active on Display
-            </button>
-            <button onclick="clearDisplay()"
-                style="padding:0.75rem 1.5rem; border-radius:8px; border:2px solid #8a2be2; background:transparent; color:#fff; font-weight:600; cursor:pointer;">
-                Clear Display
-            </button>
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; opacity:0.6; margin-bottom:0.4rem; font-size:0.85rem;">Try</label>
+                <div style="display:flex; gap:0.5rem;">
+                    <label style="flex:1; text-align:center; padding:0.5rem; border-radius:8px; border:1px solid #333; cursor:pointer; font-size:0.85rem;">
+                        <input type="radio" name="active-try-{{ track_letter }}" value="try1" checked> Try 1
+                    </label>
+                    <label style="flex:1; text-align:center; padding:0.5rem; border-radius:8px; border:1px solid #333; cursor:pointer; font-size:0.85rem;">
+                        <input type="radio" name="active-try-{{ track_letter }}" value="try2"> Try 2
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.6rem;">
+                <button onclick="setActiveRun('{{ track_letter }}')"
+                    style="flex:1; padding:0.65rem; border-radius:8px; border:none; background:#6366f1; color:#fff; font-weight:700; cursor:pointer; font-size:0.85rem;">
+                    Set Active
+                </button>
+                <button onclick="clearDisplay('{{ track_letter }}')"
+                    style="padding:0.65rem 1rem; border-radius:8px; border:2px solid #8a2be2; background:transparent; color:#fff; font-weight:600; cursor:pointer; font-size:0.85rem;">
+                    Clear
+                </button>
+            </div>
         </div>
+        {% endfor %}
     </div>
 
     <!-- Team assignment -->
@@ -168,9 +158,9 @@ function fmtTime(sec) {
     return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function filterActiveTeamSelect() {
-    const roundType = document.querySelector('input[name="active-round"]:checked').value;
-    const select = document.getElementById('active-team');
+function filterActiveTeamSelect(trackLetter) {
+    const roundType = document.querySelector(`input[name="active-round-${trackLetter}"]:checked`).value;
+    const select = document.getElementById(`active-team-${trackLetter}`);
     for (const opt of select.options) {
         if (!opt.value) continue;
         opt.hidden = roundType === 'round2' && opt.dataset.qualified !== '1';
@@ -178,11 +168,10 @@ function filterActiveTeamSelect() {
     if (select.selectedOptions[0]?.hidden) select.value = '';
 }
 
-async function setActiveRun() {
-    const teamId = document.getElementById('active-team').value;
-    const track = document.querySelector('input[name="active-track"]:checked').value;
-    const roundType = document.querySelector('input[name="active-round"]:checked').value;
-    const tryNumber = document.querySelector('input[name="active-try"]:checked').value;
+async function setActiveRun(trackLetter) {
+    const teamId = document.getElementById(`active-team-${trackLetter}`).value;
+    const roundType = document.querySelector(`input[name="active-round-${trackLetter}"]:checked`).value;
+    const tryNumber = document.querySelector(`input[name="active-try-${trackLetter}"]:checked`).value;
 
     if (!teamId) {
         showToast('Please select a team first', 'error');
@@ -193,25 +182,24 @@ async function setActiveRun() {
         const r = await fetch('/api/set-active-run/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ team_id: parseInt(teamId), track: track, round_type: roundType, try_number: tryNumber })
+            body: JSON.stringify({ team_id: parseInt(teamId), track: trackLetter, round_type: roundType, try_number: tryNumber })
         });
         const result = await r.json();
-        if (r.ok) showToast(`Track ${track} updated — ${result.team_name} is active!`, 'success');
+        if (r.ok) showToast(`Track ${trackLetter} updated — ${result.team_name} is active!`, 'success');
         else showToast(result.error || 'Failed to set active run', 'error');
     } catch (e) {
         showToast('Network error', 'error');
     }
 }
 
-async function clearDisplay() {
-    const track = document.querySelector('input[name="active-track"]:checked').value;
+async function clearDisplay(trackLetter) {
     try {
         const r = await fetch('/api/clear-active-run/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ track: track })
+            body: JSON.stringify({ track: trackLetter })
         });
-        if (r.ok) showToast(`Track ${track} display cleared`, 'success');
+        if (r.ok) showToast(`Track ${trackLetter} display cleared`, 'success');
         else showToast('Failed to clear display', 'error');
     } catch (e) {
         showToast('Network error', 'error');
