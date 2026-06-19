@@ -12,6 +12,9 @@ from .models import Team, MatchRun, ActiveRun, CalibrationSession
 JUDGE_PIN = os.environ.get('JUDGE_PIN', '1234')
 ORGANIZER_PIN = os.environ.get('ORGANIZER_PIN', '0000')
 
+# Total checkpoints on each track, used to auto-fill checkpoints_reached when a robot finishes
+TRACK_CHECKPOINTS = {'round1': 5, 'round2': 3}
+
 # ============================================================
 # IN-MEMORY STOPWATCH STATE (driven by ESP32 triggers)
 # ============================================================
@@ -207,6 +210,10 @@ def api_submit_run(request):
     player_confirmed = data.get('player_confirmed', False)
     finished = data.get('finished', True)
     checkpoints_reached = data.get('checkpoints_reached', 0)
+
+    # If the robot finished, it reached all checkpoints for that stage
+    if finished:
+        checkpoints_reached = TRACK_CHECKPOINTS.get(round_type, 0)
 
     # Validate
     if not all([team_id, round_type, try_number, track, raw_time is not None]):
