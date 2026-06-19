@@ -146,7 +146,7 @@ async function deleteRunResult() {
     }
 
     const teamText = teamSelect.options[teamSelect.selectedIndex].text;
-    const roundText = roundType === 'round1' ? 'Round 1' : 'Round 2';
+    const roundText = roundType === 'round1' ? 'Qualification Stage' : 'Finals';
     const tryText = tryNumber === 'try1' ? 'Try 1' : 'Try 2';
 
     if (!confirm(`Are you sure you want to delete the run result for ${teamText} (${roundText}, ${tryText})?\nThis action cannot be undone.`)) {

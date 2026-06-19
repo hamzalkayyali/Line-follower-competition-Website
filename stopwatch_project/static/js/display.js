@@ -129,7 +129,7 @@ async function fetchActiveRunDisplay() {
                 document.getElementById(`${prefix}-team-name`).textContent = run.team_name;
 
                 // Show round/try info
-                const roundLabel = run.round_type === 'round1' ? 'Round 1' : 'Round 2';
+                const roundLabel = run.round_type === 'round1' ? 'Qualification Stage' : 'Finals';
                 const tryLabel = run.try_number === 'try1' ? 'Try 1' : 'Try 2';
                 document.getElementById(`${prefix}-round`).textContent = `${roundLabel} — ${tryLabel}`;
 

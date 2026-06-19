@@ -23,7 +23,7 @@ class Team(models.Model):
         return min(valid_times) if valid_times else 9999.99
 
 class MatchRun(models.Model):
-    ROUND_CHOICES = [('round1', 'Round 1 (All)'), ('round2', 'Round 2 (Top 8)')]
+    ROUND_CHOICES = [('round1', 'Qualification Stage (All)'), ('round2', 'Finals (Top 8)')]
     TRY_CHOICES = [('try1', 'Try 1'), ('try2', 'Try 2')]
     TRACK_CHOICES = [('A', 'Track A'), ('B', 'Track B')]
 
