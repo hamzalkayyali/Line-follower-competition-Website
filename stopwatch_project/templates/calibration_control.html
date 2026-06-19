@@ -31,6 +31,34 @@
         </button>
     </div>
 
+    <!-- Manual Stopwatch Control -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <h3 style="margin:0 0 0.5rem;">⏱ Manual Stopwatch Control</h3>
+        <p style="opacity:0.5; font-size:0.85rem; margin:0 0 1.2rem;">
+            Use this if a track's ESP32 didn't send a stop signal and the race stopwatch is stuck running.
+        </p>
+        <div style="display:flex; gap:1.5rem;">
+            <div style="flex:1;">
+                <div style="opacity:0.6; margin-bottom:0.5rem;">Track A</div>
+                <div style="display:flex; gap:0.5rem;">
+                    <button onclick="manualStopwatch('track1','stop')"
+                        style="flex:1; padding:0.6rem; border-radius:8px; border:2px solid #ef4444; background:transparent; color:#ef4444; font-weight:600; cursor:pointer;">Stop</button>
+                    <button onclick="manualStopwatch('track1','reset')"
+                        style="flex:1; padding:0.6rem; border-radius:8px; border:2px solid #8a2be2; background:transparent; color:#fff; font-weight:600; cursor:pointer;">Reset</button>
+                </div>
+            </div>
+            <div style="flex:1;">
+                <div style="opacity:0.6; margin-bottom:0.5rem;">Track B</div>
+                <div style="display:flex; gap:0.5rem;">
+                    <button onclick="manualStopwatch('track2','stop')"
+                        style="flex:1; padding:0.6rem; border-radius:8px; border:2px solid #ef4444; background:transparent; color:#ef4444; font-weight:600; cursor:pointer;">Stop</button>
+                    <button onclick="manualStopwatch('track2','reset')"
+                        style="flex:1; padding:0.6rem; border-radius:8px; border:2px solid #8a2be2; background:transparent; color:#fff; font-weight:600; cursor:pointer;">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Team assignment -->
     <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
         <h3 style="margin:0 0 1.2rem;">Assign Teams</h3>
@@ -73,6 +101,19 @@ function fmtTime(sec) {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+async function manualStopwatch(track, action) {
+    try {
+        const r = await fetch(`/api/${track}/${action}/`, { method: 'POST' });
+        if (r.ok) {
+            showToast(`${track === 'track1' ? 'Track A' : 'Track B'} ${action === 'stop' ? 'stopped' : 'reset'}`, 'success');
+        } else {
+            showToast('Failed to control stopwatch', 'error');
+        }
+    } catch (e) {
+        showToast('Network error', 'error');
+    }
 }
 
 async function timerAction(action) {
