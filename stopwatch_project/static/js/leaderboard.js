@@ -154,51 +154,11 @@ function renderRound1(teams) {
     }).join('');
 }
 
-function renderRound2(teams) {
-    const tbody = document.getElementById('round2-body');
-    if (!teams || teams.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:24px;">Awaiting qualified teams...</td></tr>';
-        return;
-    }
-
-    // Sort: best time ASC, then most checkpoints DESC as tiebreaker
-    teams.sort((a, b) => a.round2_best - b.round2_best || (b.best_checkpoints || 0) - (a.best_checkpoints || 0));
-
-    tbody.innerHTML = teams.map((team, i) => {
-        const rank = i + 1;
-        const r1best = team.round1_best;
-        const try1 = team.round2_try1;
-        const try2 = team.round2_try2;
-        const best = team.round2_best;
-
-        const fmt1 = try1 ? (team.round2_try1_dnf ? `DNF +4:00` : formatTime(try1)) : '—';
-        const fmt2 = try2 ? (team.round2_try2_dnf ? `DNF +4:00` : formatTime(try2)) : '—';
-        const fmtBest = best && best < 9999 ? (team.round2_best_dnf ? `DNF +4:00` : formatTime(best)) : '—';
-
-        return `
-            <tr style="animation-delay: ${(i * 0.05).toFixed(2)}s">
-                <td><span class="rank-badge ${getRankClass(rank)}">${rank}</span></td>
-                <td>
-                    <div class="team-info">
-                        <span class="team-name">${team.team_name}</span>
-                    </div>
-                </td>
-                <td class="time-cell">${r1best && r1best < 9999 ? formatTime(r1best) : '—'}</td>
-                <td class="time-cell ${!try1 ? 'empty' : ''}">${fmt1}</td>
-                <td class="time-cell ${!try2 ? 'empty' : ''}">${fmt2}</td>
-                <td class="time-cell ${best && best < 9999 ? 'best' : 'empty'}">${fmtBest}</td>
-                <td class="time-cell ${team.best_checkpoints ? '' : 'empty'}" style="text-align:center;">${team.best_checkpoints || '—'}</td>
-            </tr>
-        `;
-    }).join('');
-}
-
 async function fetchLeaderboard() {
     try {
         const response = await fetch('/api/leaderboard/');
         const data = await response.json();
         renderRound1(data.round1);
-        renderRound2(data.round2);
     } catch (err) {
         console.error('Failed to fetch leaderboard:', err);
     }

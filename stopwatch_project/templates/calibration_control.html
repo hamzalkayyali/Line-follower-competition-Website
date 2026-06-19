@@ -2,7 +2,7 @@
 {% block title %}Calibration Control{% endblock %}
 
 {% block content %}
-<div style="max-width:600px; margin:3rem auto; padding:0 1rem;">
+<div style="max-width:900px; margin:3rem auto; padding:0 1rem;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
         <h2 style="margin:0;">Calibration Control</h2>
@@ -128,6 +128,32 @@
         </div>
     </div>
 
+    <!-- Finals Leaderboard -->
+    <div style="background:var(--card-bg,#1e1e2e); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="margin:0;">Finals — Qualified Teams</h3>
+            <span style="background:#22c55e22; color:#22c55e; padding:0.25rem 0.75rem; border-radius:999px; font-size:0.75rem; font-weight:700;">TOP 8</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead>
+                    <tr style="text-align:left; opacity:0.5; font-size:0.8rem;">
+                        <th style="padding:0.5rem;">Rank</th>
+                        <th style="padding:0.5rem;">Team</th>
+                        <th style="padding:0.5rem;">Q. Best</th>
+                        <th style="padding:0.5rem;">Try 1</th>
+                        <th style="padding:0.5rem;">Try 2</th>
+                        <th style="padding:0.5rem;">Best Time</th>
+                        <th style="padding:0.5rem; text-align:center;">Checkpoints</th>
+                    </tr>
+                </thead>
+                <tbody id="finals-body">
+                    <tr><td colspan="7" style="padding:1rem; text-align:center; opacity:0.5;">Awaiting qualified teams...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div style="text-align:center;">
         <a href="{% url 'calibration_display' %}" target="_blank"
             style="opacity:0.6; font-size:0.9rem;">Open display page ↗</a>
@@ -230,6 +256,58 @@ function getCookie(name) {
     return v ? v.pop() : '';
 }
 
+function formatRaceTime(seconds) {
+    if (!seconds || seconds <= 0 || seconds >= 9999) return '—';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.round((seconds % 1) * 100);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+}
+
+function renderFinals(teams) {
+    const tbody = document.getElementById('finals-body');
+    if (!teams || teams.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding:1rem; text-align:center; opacity:0.5;">Awaiting qualified teams...</td></tr>';
+        return;
+    }
+
+    teams.sort((a, b) => a.round2_best - b.round2_best || (b.best_checkpoints || 0) - (a.best_checkpoints || 0));
+
+    tbody.innerHTML = teams.map((team, i) => {
+        const rank = i + 1;
+        const r1best = team.round1_best;
+        const try1 = team.round2_try1;
+        const try2 = team.round2_try2;
+        const best = team.round2_best;
+
+        const fmt1 = try1 ? (team.round2_try1_dnf ? `DNF +4:00` : formatRaceTime(try1)) : '—';
+        const fmt2 = try2 ? (team.round2_try2_dnf ? `DNF +4:00` : formatRaceTime(try2)) : '—';
+        const fmtBest = best && best < 9999 ? (team.round2_best_dnf ? `DNF +4:00` : formatRaceTime(best)) : '—';
+
+        return `
+            <tr style="border-top:1px solid #333;">
+                <td style="padding:0.5rem;">${rank}</td>
+                <td style="padding:0.5rem;">${team.team_name}</td>
+                <td style="padding:0.5rem;">${r1best && r1best < 9999 ? formatRaceTime(r1best) : '—'}</td>
+                <td style="padding:0.5rem;">${fmt1}</td>
+                <td style="padding:0.5rem;">${fmt2}</td>
+                <td style="padding:0.5rem; font-weight:700; color:${best && best < 9999 ? '#22c55e' : '#fff'};">${fmtBest}</td>
+                <td style="padding:0.5rem; text-align:center;">${team.best_checkpoints || '—'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function fetchFinals() {
+    try {
+        const r = await fetch('/api/leaderboard/');
+        const d = await r.json();
+        renderFinals(d.round2);
+    } catch (e) {}
+    setTimeout(fetchFinals, 3000);
+}
+
 poll();
+fetchFinals();
 </script>
 {% endblock %}
