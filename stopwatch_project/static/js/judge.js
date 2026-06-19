@@ -51,6 +51,22 @@ async function loadTeams() {
 }
 
 // ============================================================
+// MANUAL STOPWATCH CONTROL (recover stuck stopwatches)
+// ============================================================
+async function manualStopwatch(track, action) {
+    try {
+        const response = await fetch(`/api/${track}/${action}/`, { method: 'POST' });
+        if (response.ok) {
+            showToast(`${track === 'track1' ? 'Track A' : 'Track B'} ${action === 'stop' ? 'stopped' : 'reset'}`, 'success');
+        } else {
+            showToast('Failed to control stopwatch', 'error');
+        }
+    } catch (err) {
+        showToast('Network error', 'error');
+    }
+}
+
+// ============================================================
 // SUBMIT RUN RESULT
 // ============================================================
 async function submitRun(event) {

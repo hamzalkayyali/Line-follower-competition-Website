@@ -12,6 +12,30 @@
         <p>Record match results &bull; Manage active runs</p>
     </div>
 
+    <!-- MANUAL STOPWATCH CONTROL -->
+    <div class="card mb-lg">
+        <h3>⏱ Manual Stopwatch Control</h3>
+        <p class="text-muted" style="font-size:0.8rem; margin-bottom:16px;">
+            Use this if a track's ESP32 didn't send a stop signal and the stopwatch is stuck running.
+        </p>
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Track A</label>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn-set-active" onclick="manualStopwatch('track1','stop')" style="background:transparent; border:2px solid rgba(231,76,60,0.5); color:var(--error); box-shadow:none; flex:1;">Stop</button>
+                    <button type="button" class="btn-set-active" onclick="manualStopwatch('track1','reset')" style="background:transparent; border:2px solid rgba(138,43,226,0.5); color:var(--text-primary); box-shadow:none; flex:1;">Reset</button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Track B</label>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn-set-active" onclick="manualStopwatch('track2','stop')" style="background:transparent; border:2px solid rgba(231,76,60,0.5); color:var(--error); box-shadow:none; flex:1;">Stop</button>
+                    <button type="button" class="btn-set-active" onclick="manualStopwatch('track2','reset')" style="background:transparent; border:2px solid rgba(138,43,226,0.5); color:var(--text-primary); box-shadow:none; flex:1;">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SUBMIT RUN RESULT FORM -->
     <div class="card">
         <div class="card-header">
