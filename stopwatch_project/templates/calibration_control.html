@@ -44,7 +44,7 @@
                 <select id="active-team" style="width:100%; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
                     <option value="">Select team...</option>
                     {% for t in teams %}
-                    <option value="{{ t.id }}">#{{ t.team_number }} — {{ t.team_name }}</option>
+                    <option value="{{ t.id }}">{{ t.team_name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -108,7 +108,7 @@
                 <select id="sel-team-a" style="flex:1; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
                     <option value="">— No team —</option>
                     {% for t in teams %}
-                    <option value="{{ t.id }}">#{{ t.team_number }} {{ t.team_name }}</option>
+                    <option value="{{ t.id }}">{{ t.team_name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -117,7 +117,7 @@
                 <select id="sel-team-b" style="flex:1; padding:0.6rem 1rem; border-radius:8px; border:1px solid #333; background:#111; color:#fff; font-size:1rem;">
                     <option value="">— No team —</option>
                     {% for t in teams %}
-                    <option value="{{ t.id }}">#{{ t.team_number }} {{ t.team_name }}</option>
+                    <option value="{{ t.id }}">{{ t.team_name }}</option>
                     {% endfor %}
                 </select>
             </div>

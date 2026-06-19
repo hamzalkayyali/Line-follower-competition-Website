@@ -40,7 +40,7 @@ async function loadTeams() {
             for (const team of data.teams) {
                 const option = document.createElement('option');
                 option.value = team.id;
-                option.textContent = `#${team.team_number} — ${team.team_name}`;
+                option.textContent = team.team_name;
                 select.appendChild(option);
             }
         }
