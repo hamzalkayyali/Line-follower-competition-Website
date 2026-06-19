@@ -130,7 +130,7 @@ def api_leaderboard(request):
         r1_try2_dnf = (r1_try2_run and not r1_try2_run.finished) if r1_try2_run else False
         r1_best = team.round1_best
         r1_best_checkpoints = max(
-            (r.checkpoints_reached for r in [r1_try1_run, r1_try2_run] if r and not r.finished),
+            (r.checkpoints_reached for r in [r1_try1_run, r1_try2_run] if r),
             default=0
         )
 
@@ -158,7 +158,7 @@ def api_leaderboard(request):
             r2_try2_dnf = (not r2_try2_run.finished) if r2_try2_run else False
             r2_best = team.round2_best
             r2_best_checkpoints = max(
-                (r.checkpoints_reached for r in [r2_try1_run, r2_try2_run] if r and not r.finished),
+                (r.checkpoints_reached for r in [r2_try1_run, r2_try2_run] if r),
                 default=0
             )
 
