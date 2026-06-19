@@ -29,7 +29,7 @@ async function loadTeams() {
         const response = await fetch('/api/teams/');
         const data = await response.json();
 
-        const selects = ['team-select', 'active-team'];
+        const selects = ['team-select'];
         for (const selectId of selects) {
             const select = document.getElementById(selectId);
             // Keep the first placeholder option
@@ -47,64 +47,6 @@ async function loadTeams() {
     } catch (err) {
         console.error('Failed to load teams:', err);
         showToast('Failed to load teams', 'error');
-    }
-}
-
-// ============================================================
-// SET ACTIVE RUN (Display Board)
-// ============================================================
-async function setActiveRun() {
-    const teamId = document.getElementById('active-team').value;
-    const track = document.querySelector('input[name="active-track"]:checked').value;
-    const roundType = document.querySelector('input[name="active-round"]:checked').value;
-    const tryNumber = document.querySelector('input[name="active-try"]:checked').value;
-
-    if (!teamId) {
-        showToast('Please select a team first', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/set-active-run/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                team_id: parseInt(teamId),
-                track: track,
-                round_type: roundType,
-                try_number: tryNumber
-            })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            showToast(`Track ${track} updated — ${result.team_name} is active!`, 'success');
-        } else {
-            showToast(result.error || 'Failed to set active run', 'error');
-        }
-    } catch (err) {
-        showToast('Network error', 'error');
-    }
-}
-
-async function clearDisplay() {
-    const track = document.querySelector('input[name="active-track"]:checked').value;
-    
-    try {
-        const response = await fetch('/api/clear-active-run/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ track: track })
-        });
-        
-        if (response.ok) {
-            showToast(`Track ${track} display cleared`, 'success');
-        } else {
-            showToast('Failed to clear display', 'error');
-        }
-    } catch (err) {
-        showToast('Network error', 'error');
     }
 }
 
