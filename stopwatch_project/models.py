@@ -57,6 +57,15 @@ class MatchRun(models.Model):
         return f"{self.team} — {self.round_type} {self.try_number} ({self.total_time}s)"
 
 
+class StopwatchState(models.Model):
+    """Persists the ESP32-driven stopwatch state per track so it survives server restarts."""
+    track = models.CharField(max_length=10, unique=True)  # 'track1' or 'track2'
+    state = models.CharField(max_length=10, default='stop')  # 'start', 'stop', or 'reset'
+
+    def __str__(self):
+        return f"{self.track}: {self.state}"
+
+
 class CompetitionState(models.Model):
     """Singleton row tracking whether Qualification Stage submissions are locked."""
     qualification_locked = models.BooleanField(default=False)

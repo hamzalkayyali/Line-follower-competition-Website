@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect # pyright: ignore[reportMissingMod
 # pyrefly: ignore [missing-import]
 from django.views.decorators.csrf import csrf_exempt # pyright: ignore[reportMissingModuleSource]
 from django.utils import timezone # pyright: ignore[reportMissingModuleSource]
-from .models import Team, MatchRun, ActiveRun, CalibrationSession, CompetitionState
+from .models import Team, MatchRun, ActiveRun, CalibrationSession, CompetitionState, StopwatchState
 
 JUDGE_PIN = os.environ.get('JUDGE_PIN', '1234')
 ORGANIZER_PIN = os.environ.get('ORGANIZER_PIN', '0000')
@@ -17,12 +17,17 @@ ADMIN_PIN = os.environ.get('ADMIN_PIN', '9999')
 TRACK_CHECKPOINTS = {'round1': 5, 'round2': 3}
 
 # ============================================================
-# IN-MEMORY STOPWATCH STATE (driven by ESP32 triggers)
+# STOPWATCH STATE (driven by ESP32 triggers, persisted in DB)
 # ============================================================
-stopwatch_states = {
-    "track1": "stop",
-    "track2": "stop"
-}
+def _get_stopwatch_state(track):
+    obj, _ = StopwatchState.objects.get_or_create(track=track, defaults={'state': 'stop'})
+    return obj
+
+
+def _set_stopwatch_state(track, state):
+    obj, _ = StopwatchState.objects.get_or_create(track=track, defaults={'state': 'stop'})
+    obj.state = state
+    obj.save()
 
 
 # ============================================================
@@ -77,15 +82,15 @@ def stopwatch_page(request):
 # ============================================================
 def get_state(request):
     """Returns the current stopwatch state dictionary to the web page."""
-    return JsonResponse(stopwatch_states)
+    states = {s.track: s.state for s in StopwatchState.objects.all()}
+    return JsonResponse(states)
 
 
 @csrf_exempt
 def trigger_event(request, track, action):
     """Receives incoming POST requests from the ESP32 units."""
-    global stopwatch_states
-    if request.method == 'POST' and track in stopwatch_states and action in ['start', 'stop', 'reset']:
-        stopwatch_states[track] = action
+    if request.method == 'POST' and track in ('track1', 'track2') and action in ['start', 'stop', 'reset']:
+        _set_stopwatch_state(track, action)
         print(f"[{track.upper()}] ESP32 changed state to: {action}")
         return HttpResponse("OK", status=200)
     return HttpResponse("Bad Request", status=400)
@@ -251,7 +256,7 @@ def api_submit_run(request):
 
     # Reset the stopwatch and clear active run for this track
     track_key = 'track1' if track == 'A' else 'track2'
-    stopwatch_states[track_key] = 'reset'
+    _set_stopwatch_state(track_key, 'reset')
 
     # Clear the active team from this track
     try:
@@ -356,7 +361,7 @@ def api_set_active_run(request):
 
     # Reset the stopwatch state for this track when setting a new active run
     track_key = 'track1' if track == 'A' else 'track2'
-    stopwatch_states[track_key] = 'stop'
+    _set_stopwatch_state(track_key, 'stop')
 
     active_run, _ = ActiveRun.objects.update_or_create(
         track=track,
