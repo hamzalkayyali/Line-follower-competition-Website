@@ -231,6 +231,8 @@ async function setTeams() {
     showToast('Teams saved!');
 }
 
+let teamSelectsInitialized = false;
+
 async function poll() {
     try {
         const r = await fetch('/api/calibration/state/');
@@ -243,8 +245,13 @@ async function poll() {
         else if (d.remaining >= 600) statusEl.textContent = 'WAITING TO START';
         else statusEl.textContent = 'PAUSED';
 
-        if (d.team_a) document.getElementById('sel-team-a').value = d.team_a.id;
-        if (d.team_b) document.getElementById('sel-team-b').value = d.team_b.id;
+        // Only set the dropdown values once on first load — otherwise polling
+        // overwrites the user's in-progress selection before they can Save.
+        if (!teamSelectsInitialized) {
+            if (d.team_a) document.getElementById('sel-team-a').value = d.team_a.id;
+            if (d.team_b) document.getElementById('sel-team-b').value = d.team_b.id;
+            teamSelectsInitialized = true;
+        }
     } catch(e) {}
     setTimeout(poll, 500);
 }
